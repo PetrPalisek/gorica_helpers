@@ -11,7 +11,7 @@ gorica_pool_lavaan_definedparams <- function(imputed_data_list, model.syntax, es
     
     # Fit the specified SEM to each dataset
     fit <- lavaan::sem(model = model.syntax, data = as.data.frame(imputed_data_list[[dataset]]),
-                       estimator = estimator, ordered = ordered, parameterization = "theta")
+                       estimator = estimator, ordered = ordered, parameterization = "theta", meanstructure = T)
     
     indices <- rep(NA, length(hypothesis_elements))
     
