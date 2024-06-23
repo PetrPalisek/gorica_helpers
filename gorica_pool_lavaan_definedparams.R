@@ -4,21 +4,21 @@ gorica_pool_lavaan_definedparams <- function(imputed_data_list, model.syntax, es
   library(lavaan)
   library(restriktor)
   
-  gorica_df <- data.frame() # Dataframe to store the results
+  gorica_df <- c() # Dataframe to store the results
   
   # Loop over each imputed dataset
   for (dataset in 1:length(imputed_data_list)) {
     
     # Fit the specified SEM to each dataset
-    fit <- lavaan::sem(model = model.syntax, data = as.data.frame(imputed_data_list[[dataset]]),
-                       estimator = estimator, ordered = ordered, parameterization = "theta", meanstructure = T)
+    fit <- lavaan::sem(model = model.syntax, data = data.frame(imputed_data_list[[dataset]]),
+                       estimator = estimator, ordered = ordered, parameterization = "theta", 
+                       meanstructure = T,  missing = "pairwise")
     
     indices <- rep(NA, length(hypothesis_elements))
     
     # Extract the parameters from hypothesis_elements
     for (i in seq_along(hypothesis_elements)) {
-      param <- hypothesis_elements[i]
-      indices[i] <- which(standardizedSolution(fit)[, 'label'] == param)
+      indices[i] <- which(standardizedSolution(fit)[, 'label'] == hypothesis_elements[i])
     }
     
     est <- standardizedSolution(fit)[indices, 'est.std'] # estimates
@@ -26,12 +26,10 @@ gorica_pool_lavaan_definedparams <- function(imputed_data_list, model.syntax, es
     
     names(est) <- hypothesis_elements
     
-    gorica_result <- restriktor::goric(est, VCOV = VCOV,
-                                       hypotheses = list(hypothesis), comparison = "complement")[["result"]][1, 7]
-    
-    gorica_df <- rbind(gorica_df, data.frame(dataset = dataset, gorica_result = gorica_result))
-  }
-  
+    gorica_df[dataset] <- restriktor::goric(est, VCOV = VCOV,
+                                       hypotheses = list(hypothesis), comparison = "complement")[["result"]][["gorica.weights"]][1]
+      }
+  print(gorica_df)
   return(gorica_df) 
 }
 
